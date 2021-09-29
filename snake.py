@@ -2,12 +2,16 @@ import cv2
 import numpy as np
 import random
 import time
+from playsound import playsound
 
 VOID = 0
 SNAKE = 1
 APPLE = 2
 STARTING_SIZE = 4
-
+DELAY = 200
+SOUND_EAT = ['res/sound/eat_bite_apple_1.mp3',
+             'res/sound/eat_bite_apple_2.mp3',
+             'res/sound/eat_bite_apple_3.mp3']
 EN = 0
 FR = 1
 
@@ -18,6 +22,7 @@ DOWN = (115, 115)
 LEFT = (97, 113)
 RIGHT = (100, 100)
 
+import threading
 
 class Snake:
 
@@ -80,8 +85,8 @@ class Snake:
 
     def __draw_score(self):
         text = "Score: " + str(self.score)
-        cv2.putText(self.window, text, (self.width // 2, self.height // 2), cv2.FONT_HERSHEY_COMPLEX, 1,
-                    (0, 0, 255), 2)
+        cv2.putText(self.window, text, (self.width // 2, self.height - self.res), cv2.FONT_HERSHEY_COMPLEX, 1,
+                    (0, 0, 150), 2)
 
     def __snake_update(self, head):
         """ LOGIC FUNCTION
@@ -111,7 +116,6 @@ class Snake:
 
     def __apple_update_helper(self, x, y, head):
         if head.x == x and head.y == y:
-            print("OVERLAP")
             return True
         else:
             if head.previous is not None:
@@ -140,6 +144,10 @@ class Snake:
                 self.__grow(head)
                 self.apples.remove(apple)
                 self.score += 1
+                n = random.randint(0, len(SOUND_EAT)-1)
+
+                # Run the function 'playsound' on a parallel thread
+                threading.Thread(target=playsound, args=(SOUND_EAT[n],), daemon=True).start()
 
     def __collision(self, head, segment):
         """ LOGIC FUNCTION
@@ -167,11 +175,18 @@ class Snake:
             self.__set_grid()
 
             if self.__collision(self.head, self.head.previous):
+                threading.Thread(target=playsound, args=("res/sound/game-over-arcade.mp3",), daemon=True).start()
                 break
 
             cv2.imshow("Snake", self.window)
 
-            k = cv2.waitKey(200)
+            initial_time = time.time()
+            k = cv2.waitKey(DELAY)
+            final_time = time.time() - initial_time
+
+            if final_time < DELAY * 0.001:
+                time.sleep(DELAY * 0.001 - final_time)
+
             if k == -1:
                 continue
             elif k == PAUSE:
@@ -190,10 +205,11 @@ class Snake:
                     self.head.vector = (0, 1)
 
         print("hey")
-        cv2.putText(self.window, "GAME OVER", (self.width//2, self.height//2), cv2.FONT_HERSHEY_COMPLEX, 20, (0, 0, 255), 4)
+        cv2.putText(self.window, "GAME OVER", (self.width//4, self.height//2), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
+        cv2.imshow("Snake", self.window)
         # TODO text of the Game Over doesn't work
 
-        cv2.waitKey(2000)
+        cv2.waitKey(0)
 
 
 class Segment:
