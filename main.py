@@ -1,6 +1,8 @@
-from snake import Snake
+from snake_new import Snake
+from window import Window
 
 
 if __name__ == '__main__':
-    game = Snake(15, 15, 20)
-    game.start()
+    snake = Snake(15, 15)
+    myWindow = Window(snake, 20)
+    myWindow.start()

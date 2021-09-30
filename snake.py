@@ -1,22 +1,16 @@
-import cv2
-import numpy as np
 import random
-import time
 import threading
 from playsound import playsound
 
-VOID = 0
-SNAKE = 1
-APPLE = 2
-STARTING_SIZE = 3
-DELAY = 200
+
 SOUND_EAT = ['res/sound/eat_bite_apple_1.mp3',
              'res/sound/eat_bite_apple_2.mp3',
              'res/sound/eat_bite_apple_3.mp3']
+SOUND_GAME_OVER = "res/sound/game-over-arcade.mp3"
+
+STARTING_SIZE = 3
 EN = 0
 FR = 1
-
-PAUSE = 112
 
 UP = (119, 122)
 DOWN = (115, 115)
@@ -26,7 +20,7 @@ RIGHT = (100, 100)
 
 class Snake:
 
-    def __init__(self, n_y, n_x, res):
+    def __init__(self, n_y, n_x):
         """ Initialize the parameters of the windows and the board game.
         The board is an easier representation of the window. It is made of squares, while the windows is the graphical
         representation of the board, and made of pixels
@@ -36,21 +30,11 @@ class Snake:
         """
         self.n_x = n_x
         self.n_y = n_y
-        self.res = res
-        self.width = n_x * res
-        self.height = n_y * res
-        self.window = np.zeros((n_y * res, n_x * res, 3), np.uint8)
         self.apples = []
         self.head = Segment(self.n_y // 2, self.n_x // 2)
         self.__set_length(STARTING_SIZE)
         self.score = 0
-        self.language = EN
-
-    def __set_grid(self):
-        for i in range(0, self.height, self.res):
-            cv2.line(self.window, (0, i), (self.width, i), (50, 50, 50), 1)
-        for i in range(0, self.width, self.res):
-            cv2.line(self.window, (i, 0), (i, self.height), (50, 50, 50), 1)
+        self.language = FR
 
     def __set_length(self, size):
         """ LOGIC FUNCTION
@@ -60,32 +44,6 @@ class Snake:
         """
         for i in range(size-1):
             self.__grow(self.head)
-
-    def __draw_snake(self, head):
-        """ GRAPHIC FUNCTION
-        :param head:
-        :return:
-        """
-        if head is not None:
-            cv2.circle(self.window, (head.x * self.res + self.res // 2, head.y * self.res + self.res // 2),
-                       self.res // 2, (0, 255, 0), -1)
-            cv2.circle(self.window, (head.x * self.res + self.res // 2, head.y * self.res + self.res // 2),
-                       self.res // 3, (0, 100, 0), -1)
-            self.__draw_snake(head.previous)
-
-    def __draw_apples(self):
-        """ GRAPHIC FUNCTION
-        :return:
-        """
-        for apple in self.apples:
-            cv2.circle(self.window, (apple.x * self.res + self.res // 2, apple.y * self.res + self.res // 2),
-                       self.res // 3, (0, 0, 255), -1)
-            cv2.circle(self.window, (apple.x * self.res + self.res // 2, apple.y * self.res + self.res // 4),
-                       self.res // 6, (0, 150, 0), -1)
-
-    def __draw_score(self):
-        cv2.putText(self.window, str(self.score), (self.width // 2, 2*self.res), cv2.FONT_HERSHEY_COMPLEX, 1,
-                    (0, 0, 150), 2)
 
     def __snake_update(self, head):
         """ LOGIC FUNCTION
@@ -133,14 +91,14 @@ class Snake:
             tail = Segment(head.y-head.vector[0], head.x-head.vector[1], head.vector)
             head.previous = tail
 
-    def __eat(self, head):
+    def __eat(self):
         """ LOGIC FUNCTION
         :param head:
         :return:
         """
         for apple in self.apples:
-            if apple.x == head.x and apple.y == head.y:
-                self.__grow(head)
+            if apple.x == self.head.x and apple.y == self.head.y:
+                self.__grow(self.head)
                 self.apples.remove(apple)
                 self.score += 1
                 n = random.randint(0, len(SOUND_EAT)-1)
@@ -148,7 +106,7 @@ class Snake:
                 # Run the function 'playsound' on a parallel thread
                 threading.Thread(target=playsound, args=(SOUND_EAT[n],), daemon=True).start()
 
-    def __collision(self, head, segment):
+    def collision(self, head, segment):
         """ LOGIC FUNCTION
         :param head:
         :param segment:
@@ -156,57 +114,30 @@ class Snake:
         """
         if segment:
             if head.x == segment.x and head.y == segment.y:
+                threading.Thread(target=playsound, args=(SOUND_GAME_OVER,), daemon=True).start()
                 return True
             else:
-                return self.__collision(head, segment.previous)
+                return self.collision(head, segment.previous)
         return False
 
-    def start(self):
+    def rotate_head(self, k):
+        if k == UP[self.language]:
+            if self.head.vector != (1, 0):
+                self.head.vector = (-1, 0)
+        elif k == DOWN[self.language]:
+            if self.head.vector != (-1, 0):
+                self.head.vector = (1, 0)
+        elif k == LEFT[self.language]:
+            if self.head.vector != (0, 1):
+                self.head.vector = (0, -1)
+        elif k == RIGHT[self.language]:
+            if self.head.vector != (0, -1):
+                self.head.vector = (0, 1)
 
-        while True:
-            self.window = np.zeros((self.n_y * self.res, self.n_x * self.res, 3), np.uint8)
-            self.__snake_update(self.head)
-            self.__eat(self.head)
-            self.__apple_update()
-            self.__draw_snake(self.head)
-            self.__draw_score()
-            self.__draw_apples()
-            self.__set_grid()
-
-            if self.__collision(self.head, self.head.previous):
-                threading.Thread(target=playsound, args=("res/sound/game-over-arcade.mp3",), daemon=True).start()
-                break
-
-            cv2.imshow("Snake", self.window)
-
-            initial_time = time.time()
-            k = cv2.waitKey(DELAY)
-            final_time = time.time() - initial_time
-
-            if final_time < DELAY * 0.001:
-                time.sleep(DELAY * 0.001 - final_time)
-
-            if k == -1:
-                continue
-            elif k == PAUSE:
-                cv2.waitKey(0)
-            elif k == UP[self.language]:
-                if self.head.vector != (1, 0):
-                    self.head.vector = (-1, 0)
-            elif k == DOWN[self.language]:
-                if self.head.vector != (-1, 0):
-                    self.head.vector = (1, 0)
-            elif k == LEFT[self.language]:
-                if self.head.vector != (0, 1):
-                    self.head.vector = (0, -1)
-            elif k == RIGHT[self.language]:
-                if self.head.vector != (0, -1):
-                    self.head.vector = (0, 1)
-
-        cv2.putText(self.window, "GAME OVER", (self.width//4, self.height//2), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-        cv2.imshow("Snake", self.window)
-
-        cv2.waitKey(0)
+    def play(self):
+        self.__snake_update(self.head)
+        self.__eat()
+        self.__apple_update()
 
 
 class Segment:
