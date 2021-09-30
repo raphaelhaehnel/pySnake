@@ -2,12 +2,13 @@ import cv2
 import numpy as np
 import random
 import time
+import threading
 from playsound import playsound
 
 VOID = 0
 SNAKE = 1
 APPLE = 2
-STARTING_SIZE = 4
+STARTING_SIZE = 3
 DELAY = 200
 SOUND_EAT = ['res/sound/eat_bite_apple_1.mp3',
              'res/sound/eat_bite_apple_2.mp3',
@@ -22,7 +23,6 @@ DOWN = (115, 115)
 LEFT = (97, 113)
 RIGHT = (100, 100)
 
-import threading
 
 class Snake:
 
@@ -84,8 +84,7 @@ class Snake:
                        self.res // 6, (0, 150, 0), -1)
 
     def __draw_score(self):
-        text = "Score: " + str(self.score)
-        cv2.putText(self.window, text, (self.width // 2, self.height - self.res), cv2.FONT_HERSHEY_COMPLEX, 1,
+        cv2.putText(self.window, str(self.score), (self.width // 2, 2*self.res), cv2.FONT_HERSHEY_COMPLEX, 1,
                     (0, 0, 150), 2)
 
     def __snake_update(self, head):
@@ -169,8 +168,8 @@ class Snake:
             self.__snake_update(self.head)
             self.__eat(self.head)
             self.__apple_update()
-            self.__draw_score()
             self.__draw_snake(self.head)
+            self.__draw_score()
             self.__draw_apples()
             self.__set_grid()
 
@@ -204,10 +203,8 @@ class Snake:
                 if self.head.vector != (0, -1):
                     self.head.vector = (0, 1)
 
-        print("hey")
         cv2.putText(self.window, "GAME OVER", (self.width//4, self.height//2), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
         cv2.imshow("Snake", self.window)
-        # TODO text of the Game Over doesn't work
 
         cv2.waitKey(0)
 
