@@ -8,10 +8,13 @@ SOUND_EAT = ['res/sound/eat_bite_apple_1.mp3',
              'res/sound/eat_bite_apple_3.mp3']
 SOUND_GAME_OVER = "res/sound/game-over-arcade.mp3"
 
+""" Numbers of elements of the snake at starting"""
 STARTING_SIZE = 3
+
 EN = 0
 FR = 1
 
+""" Code of some key for an english and french keyboard"""
 UP = (119, 122)
 DOWN = (115, 115)
 LEFT = (97, 113)
@@ -19,6 +22,8 @@ RIGHT = (100, 100)
 
 
 class Snake:
+    """ This class is representing the game logic, without any graphical interface
+    """
 
     def __init__(self, n_y, n_x):
         """ Initialize the parameters of the windows and the board game.
@@ -37,30 +42,31 @@ class Snake:
         self.language = FR
 
     def __set_length(self, size):
-        """ LOGIC FUNCTION
-
-        :param size:
-        :return:
+        """ Set the starting size of the snake
+        :param size: The size of the snake
+        :return: None
         """
         for i in range(size-1):
             self.__grow(self.head)
 
     def __snake_update(self, head):
-        """ LOGIC FUNCTION
-        :param head:
-        :return:
+        """ Advance and rotate (if necessary) each segment of the snake
+        :param head: A segment object that represent the head of the snake
+        :return: None
         """
         if head is not None:
             head.y = (head.y + head.vector[0]) % self.n_y
             head.x = (head.x + head.vector[1]) % self.n_x
             self.__snake_update(head.previous)
             if head.previous is not None:
+
+                # Rotate the segment if necessary
                 if head.vector != head.previous.vector:
                     head.previous.vector = head.vector
 
     def __apple_update(self):
-        """ LOGIC FUNCTION
-        :return:
+        """ Generate a new apple when no apples exists on the board
+        :return: None
         """
         if len(self.apples) == 0:
             overlap = True
@@ -68,22 +74,32 @@ class Snake:
             while overlap:
                 x = random.randint(0, self.n_x - 1)
                 y = random.randint(0, self.n_y - 1)
+
+                # If the apple is overlapping with a segment, compute a new position for the apple
                 overlap = self.__apple_update_helper(x, y, self.head)
+
+            # Append the new apple in the list of apples
             self.apples.append(Apple(y, x))
 
-    def __apple_update_helper(self, x, y, head):
-        if head.x == x and head.y == y:
+    def __apple_update_helper(self, x, y, segment):
+        """ Helper function for the __apple_update function. It calls of the segments of the snake recursively
+        :param x: x position of the apple
+        :param y: y position of the apple
+        :param head: current segment of the snake
+        :return: True if there is an overlap, False otherwise
+        """
+        if segment.x == x and segment.y == y:
             return True
         else:
-            if head.previous is not None:
-                return self.__apple_update_helper(x, y, head.previous)
+            if segment.previous is not None:
+                return self.__apple_update_helper(x, y, segment.previous)
             else:
                 return False
 
     def __grow(self, head):
-        """ LOGIC FUNCTION
-        :param head:
-        :return:
+        """ Add a segment of the snake
+        :param head: head of the snake
+        :return: None
         """
         if head.previous is not None:
             self.__grow(head.previous)
@@ -92,8 +108,7 @@ class Snake:
             head.previous = tail
 
     def __eat(self):
-        """ LOGIC FUNCTION
-        :param head:
+        """ This function is called when the snake is running over an apple.
         :return:
         """
         for apple in self.apples:
@@ -107,11 +122,6 @@ class Snake:
                 threading.Thread(target=playsound, args=(SOUND_EAT[n],), daemon=True).start()
 
     def collision(self, head, segment):
-        """ LOGIC FUNCTION
-        :param head:
-        :param segment:
-        :return:
-        """
         if segment:
             if head.x == segment.x and head.y == segment.y:
                 threading.Thread(target=playsound, args=(SOUND_GAME_OVER,), daemon=True).start()

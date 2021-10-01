@@ -2,18 +2,19 @@ import cv2
 import numpy as np
 import time
 
-DELAY = 200
+SPEED = 5
 PAUSE = 112
 
 
 class Window:
 
-    def __init__(self, snake, res):
+    def __init__(self, snake, res, speed=SPEED):
         self.width = snake.n_x * res
         self.height = snake.n_y * res
         self.res = res
         self.snake = snake
         self.window = np.zeros((self.height, self.width, 3), np.uint8)
+        self.delay = int(1000/speed)
 
     def __draw_grid(self):
         for i in range(0, self.height, self.res):
@@ -40,6 +41,15 @@ class Window:
         cv2.putText(self.window, str(self.snake.score), (self.width // 2, 2*self.res), cv2.FONT_HERSHEY_COMPLEX, 1,
                     (0, 0, 150), 2)
 
+    def __wait_delay(self):
+        initial_time = time.time()
+        k = cv2.waitKey(self.delay)
+        final_time = time.time() - initial_time
+
+        if final_time < self.delay * 0.001:
+            time.sleep(self.delay * 0.001 - final_time)
+        return k
+
     def start(self):
 
         while True:
@@ -54,13 +64,7 @@ class Window:
                 break
 
             cv2.imshow("Snake", self.window)
-
-            initial_time = time.time()
-            k = cv2.waitKey(DELAY)
-            final_time = time.time() - initial_time
-
-            if final_time < DELAY * 0.001:
-                time.sleep(DELAY * 0.001 - final_time)
+            k = self.__wait_delay()
 
             if k == PAUSE:
                 cv2.waitKey(0)
