@@ -1,7 +1,7 @@
 # PySnake
 
 Implementation of the basic game "Snake" in Python.
-Librairies used for the implementation:
+Libraries used for the implementation:
 - `OpenCV`: For drawing the game elements
 - `Numpy`: Computations for the graphic interface
 - `Playsound`: For the sound effects
@@ -14,7 +14,7 @@ Run the file `main.py`.
 2) Choose the snake speed `speed` by modifying the line `myWindow = Window(snake, res=20, speed=8)`
 
 ## Environment
-- Operatin system: Windows 10/11
+- Operating system: Windows 10/11
 - Python version: 3.10.5
 
 ## Files explanation
