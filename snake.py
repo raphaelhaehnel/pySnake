@@ -8,9 +8,6 @@ SOUND_EAT = ['res/sound/eat_bite_apple_1.mp3',
              'res/sound/eat_bite_apple_3.mp3']
 SOUND_GAME_OVER = "res/sound/game-over-arcade.mp3"
 
-""" Numbers of elements of the snake at starting"""
-STARTING_SIZE = 3
-
 EN = 0
 FR = 1
 
@@ -25,7 +22,7 @@ class Snake:
     """ This class is representing the game logic, without any graphical interface
     """
 
-    def __init__(self, n_y, n_x):
+    def __init__(self, n_y, n_x, starting_size):
         """ Initialize the parameters of the windows and the board game.
         The board is an easier representation of the window. It is made of squares, while the windows is the graphical
         representation of the board, and made of pixels
@@ -37,9 +34,9 @@ class Snake:
         self.n_y = n_y
         self.apples = []
         self.head = Segment(self.n_y // 2, self.n_x // 2)
-        self.__set_length(STARTING_SIZE)
+        self.__set_length(starting_size)
         self.score = 0
-        self.language = FR
+        self.language = EN
 
     def __set_length(self, size):
         """ Set the starting size of the snake
